@@ -102,7 +102,7 @@ class APIRequest(webapp.RequestHandler):
             
             self.response.out.write("OK")
 
-        if command == "ping":  
+        elif command == "ping":  
             name = self.request.get("name")
             
             # check if the player already exists
