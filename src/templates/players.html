@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block 'content' %}
+
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th class="column1">Name</th>
+			<th>IP address</th>
+			<th>Listen port</th>
+			<th>Last online</th>
+		</tr>
+	</thead>
+	
+	{% for player in players %}
+	
+		<tr>
+			<td>{% if player.online %}
+				<img src="/img/bullet_green.png"/>
+			{% else %}
+				<img src="/img/bullet_black.png"/>
+			{% endif %}</td>
+			<td class="column1">{{player.name}}</td>
+			<td>{{player.ip_address}}</td>
+			<td>{{player.listen_port}}</td>
+			<td>{{player.last_online}}</td>
+		</tr>
+		
+	{% endfor %}
+
+
+
+</table>
+
+
+
+{% endblock %}

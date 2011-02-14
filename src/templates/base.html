@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <script src="js/codemirror.js" type="text/javascript"></script>
+    <script src="js/jquery-1.4.4.js" type="text/javascript"></script>
+    <title>Connect IG4 - Projet</title>
+    <link rel="stylesheet" type="text/css" href="css/docs.css"/>
+	<link rel="stylesheet" type="text/css" href="css/my.css"/>
+	<link rel="stylesheet" type="text/css" href="css/panels.css"/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+  </head>
+ 
+  <body style="padding: 20px;">
+	{% block 'messages' %}
+		{{ messages }}
+	{% endblock %}
+	<img src="img/connectig4.png" style="width: 900px"></img>
+	
+	<div id="header"> 
+			<ul id="navigation">
+				<li class="level_1 {{Home}}"> <a href="/">Home</a> </li>
+				<li class="level_1 {{Players}}"> <a href="/players">Players</a> </li> 
+				<li class="level_1 {{Games}}"> <a href="/games">Games</a> </li> 
+				<li class="level_1 {{Scores}}"> <a href="/scores">Scores</a> </li>
+				<li class="level_1 {{About}}"> <a href="/about">About</a> </li> 
+			</ul> 
+	</div> 
+	
+	<div id="content">
+	{% block 'content' %}
+	
+	{% endblock %}
+	</div>
+	
+	
+	<div class="footer">
+	&copy; Copyright 2011 Razvan Dinu, Polytech Montpellier. All rights reserved.
+	</div
+
+  </body>
+</html>
