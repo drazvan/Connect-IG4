@@ -96,17 +96,17 @@ class APIRequest(webapp.RequestHandler):
         
         return player
         
-    
     def _purge():
-        """ Purge all dead players (last_online > 45 secs) """
+        """ Purge all dead players (last_online > 45 secs) (and associated games?) """
         
         print "Purge dead players"
-        
-        # Deleting entries with Google App Engine looks a bit weird...
-        # players = Player.all().filter((datetime.now() - last_online)__gt=45)
-        #         for player in players:
-        #             self.response.out.write(player.nickname)
-    
+
+        players = Player.all().filter("last_online < ", datetime.timedelta(seconds=45))
+        for player in players:
+            self.response.out.write(player.nickname)
+            #Game.all().filter("creator =", player.nickname).delete()
+            
+        Player.all().filter("last_online < ", datetime.timedelta(seconds=45)).delete()
 
     def connect(self):
         """This command must be sent to the server whenever a player connects 
@@ -141,11 +141,12 @@ class APIRequest(webapp.RequestHandler):
         if player == None:
             player = Player(nickname=nickname, password=password)
         
+        # It's a known player
         if password != player.password:
             self.response.out.write("FAIL Incorrect password")
             return 
         
-        # set new properties    
+        # set new properties, user authenticated  
         player.ip_address = ip_address
         player.listen_port = listen_port
         player.last_online = datetime.now()
@@ -168,6 +169,7 @@ class APIRequest(webapp.RequestHandler):
             - OK if everything is ok.
             - FAIL for any other errors (i.e. bad password, bad nickname, etc.)
         """
+        
         nickname = self.request.get("nickname")
         password = self.request.get("password")
 
@@ -200,6 +202,7 @@ class APIRequest(webapp.RequestHandler):
             - OK followed by a game id.
             - FAIL for any errors.
         """
+        
         nickname = self.request.get("nickname")
         password = self.request.get("password")
 
