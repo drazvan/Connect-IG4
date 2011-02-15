@@ -1,6 +1,7 @@
 import time, urllib, sys
 
-API_URL = 'http://connectig4.appspot.com/api'
+#API_URL = 'http://connectig4.appspot.com/api'
+API_URL = 'http://localhost:8080/api'
 
 def getStatus(answer):
     """ The status of the answer returned by the API is in the 2nd line"""

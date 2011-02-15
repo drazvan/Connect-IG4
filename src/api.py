@@ -49,7 +49,7 @@ ignore the rest of the options/content. Ideally you should make a function that
 takes the whole input and returns only the part between "---".
 '''
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from google.appengine.ext import webapp
 from game import Player, Game, Config
 
@@ -96,17 +96,16 @@ class APIRequest(webapp.RequestHandler):
         
         return player
         
-    def _purge():
+    def _purge(self):
         """ Purge all dead players (last_online > 45 secs) (and associated games?) """
         
-        print "Purge dead players"
-
-        players = Player.all().filter("last_online < ", datetime.timedelta(seconds=45))
+        # The request is working, but I can't manage to delete...
+        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=45))
         for player in players:
             self.response.out.write(player.nickname)
             #Game.all().filter("creator =", player.nickname).delete()
             
-        Player.all().filter("last_online < ", datetime.timedelta(seconds=45)).delete()
+        #Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=45)).delete()
 
     def connect(self):
         """This command must be sent to the server whenever a player connects 
