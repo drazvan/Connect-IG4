@@ -138,7 +138,7 @@ class APIRequest(webapp.RequestHandler):
         else:
             self.response.out.write("UNKNOWN COMMAND")  
         
-        self.response.out.write("---\n")
+        self.response.out.write("\n---\n")
 
 
 application = webapp.WSGIApplication([('/', MainPage),
