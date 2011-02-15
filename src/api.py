@@ -100,9 +100,12 @@ class APIRequest(webapp.RequestHandler):
     def _purge():
         """ Purge all dead players (last_online > 45 secs) """
         
-        players = Player.all().filter((datetime.now() - last_online)__gt=45)
-        for player in players:
-            self.response.out.write(player.nickname)
+        print "Purge dead players"
+        
+        # Deleting entries with Google App Engine looks a bit weird...
+        # players = Player.all().filter((datetime.now() - last_online)__gt=45)
+        #         for player in players:
+        #             self.response.out.write(player.nickname)
     
 
     def connect(self):
@@ -232,7 +235,8 @@ class APIRequest(webapp.RequestHandler):
             - FAIL for any errors.
         """
         
-        # Need to purge first
+        # Purge dead players from the list to prevent listing dead clients
+        self._purge()
         
         self.response.out.write("OK\n")
         
@@ -254,7 +258,8 @@ class APIRequest(webapp.RequestHandler):
             - FAIL for any errors.
         """
         
-        # Need to purge first
+        # Purge dead players before to prevent trying to connect to a dead client
+        self._purge()
         
         nickname = self.request.get("nickname")
         password = self.request.get("password")
@@ -266,7 +271,7 @@ class APIRequest(webapp.RequestHandler):
             self.response.out.write("FAIL Authentication failed")
             return
         
-        # check existing opponent
+        # check existing opponent, the purge before is important here ;)
         opponent = self._get(Player, "nickname = ", opponent_nickname)
         
         if opponent == None:
