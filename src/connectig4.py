@@ -87,6 +87,9 @@ class APIRequest(webapp.RequestHandler):
             # check if the player already exists
             existing = Player.all().filter("name = ", name)
             
+            # If there's an existing player with the same name but different IP/Port
+            # Shouldn't we just send back a FAIL?
+            
             player = Player(name=name)
             
             for p in existing:
