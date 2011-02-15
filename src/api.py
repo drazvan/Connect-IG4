@@ -95,8 +95,16 @@ class APIRequest(webapp.RequestHandler):
             return None
         
         return player
+        
     
+    def _purge():
+        """ Purge all dead players (last_online > 45 secs) """
+        
+        players = Player.all().filter((datetime.now() - last_online)__gt=45)
+        for player in players:
+            self.response.out.write(player.nickname)
     
+
     def connect(self):
         """This command must be sent to the server whenever a player connects 
         for the first time. 
@@ -115,7 +123,7 @@ class APIRequest(webapp.RequestHandler):
             
         Return value
             - OK if everything is ok and the player has been added.
-            0 FAIL for any other errors (i.e. bad password, bad IP, bad port, etc.)
+            - FAIL for any other errors (i.e. bad password, bad IP, bad port, etc.)
         """  
         
         nickname = self.request.get("nickname")
@@ -175,6 +183,8 @@ class APIRequest(webapp.RequestHandler):
         # respond with OK
         self.response.out.write("OK")
         
+        
+    #TODO : the user is able to start multiple games. Not a good idea.
     def create(self):
         """Indicates that the given player is willing to start a game and is 
         waiting for an opponent.
@@ -222,6 +232,8 @@ class APIRequest(webapp.RequestHandler):
             - FAIL for any errors.
         """
         
+        # Need to purge first
+        
         self.response.out.write("OK\n")
         
         for game in Game.all().filter("status = ", "WAITING"):
@@ -241,6 +253,9 @@ class APIRequest(webapp.RequestHandler):
             - OK followed by the IP address and port of the opponent.
             - FAIL for any errors.
         """
+        
+        # Need to purge first
+        
         nickname = self.request.get("nickname")
         password = self.request.get("password")
         opponent_nickname = self.request.get("opponent")
