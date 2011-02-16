@@ -97,23 +97,30 @@ class APIRequest(webapp.RequestHandler):
         return player
         
     def _purge(self):
-        """ Purge all dead players (last_online > 45 secs) (and associated games?) """
-        
-        # The request is working, but I can't manage to delete...
-        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=45))
-        for player in players:
-            self.response.out.write(player.nickname)
-            #Game.all().filter("creator =", player.nickname).delete()
-            
-        #Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=45)).delete()
+        """ Purge all dead players (last_online > 90 secs) """
 
+        # Get players who haven't pinged in more than 90secs and who are currently marked as online
+        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=90)).filter("online = ", True)
+        for player in players:
+            player.online = False # Not online anymore
+            player.put() # save
+        
+            # Get his former game
+            player_game = Game.all().filter("creator =", player.nickname).filter("status = ", 'PLAYING')
+            
+            for game in player_game:
+                game.status = 'ABANDONNED' # game OVER
+                game.put() # save
+            
+            
     def connect(self):
         """This command must be sent to the server whenever a player connects 
         for the first time. 
         
         If the player with the given nickname does not already exist then it is 
         created with the given password. If it already exists and the password 
-        is incorrect FAIL is returned.
+        is incorrect FAIL is returned. If he's already online, he won't be connected
+        to prevent messing up with the IP and Port
 
         Parameters
             - nickname : is the name of the player and it must be unique.
@@ -144,15 +151,59 @@ class APIRequest(webapp.RequestHandler):
         if password != player.password:
             self.response.out.write("FAIL Incorrect password")
             return 
+        elif player.online == True:
+            # It will be triggered if the player has left without saying 'disconnect'
+            # 90 seconds later, the player will be able to connect himself if someone triggers a purge
+            self.response.out.write("FAIL Already connected elsewhere")
+            return
         
         # set new properties, user authenticated  
         player.ip_address = ip_address
         player.listen_port = listen_port
         player.last_online = datetime.now()
+        player.online = True
         
         # save
         player.put()    
         
+        # respond with OK
+        self.response.out.write("OK")
+      
+    def disconnect(self):
+        """
+            This command needs to be called before leaving the client, it marks the player as offline.
+            If the user doesn't disconnect, he'll need to wait 90 seconds to be purged automatically
+            
+            Parameters
+                - nickname : is the name of the player.
+                - password : is the password for the given player.
+            
+            Return value
+                - OK if everything is ok and the player has been added.
+                - FAIL for any other errors (i.e. bad password, bad IP, bad port, etc.)
+        """
+        nickname = self.request.get("nickname")
+        password = self.request.get("password")
+        
+        # authenticate        
+        player = self._authenticate(nickname, password)
+        if player == None:
+            self.response.out.write("FAIL Authentication failed")
+            return
+        
+        # Mark as offline
+        player.online = False
+        
+        # Save
+        player.put()
+        
+        # Select his former game
+        player_game = Game.all().filter("creator =", player.nickname).filter("status = ", 'PLAYING')
+        
+        for game in player_game:
+            game.status = 'ABANDONNED' # game OVER
+            game.put() # Save
+         
         # respond with OK
         self.response.out.write("OK")
       
@@ -180,15 +231,14 @@ class APIRequest(webapp.RequestHandler):
         
         # set new properties    
         player.last_online = datetime.now()
+        player.online = True
         
         # save
         player.put()    
     
         # respond with OK
         self.response.out.write("OK")
-        
-        
-    #TODO : the user is able to start multiple games. Not a good idea.
+  
     def create(self):
         """Indicates that the given player is willing to start a game and is 
         waiting for an opponent.
@@ -209,6 +259,12 @@ class APIRequest(webapp.RequestHandler):
         player = self._authenticate(nickname, password)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
+            return
+        
+        # check if he's already playing
+        game = Game.all().filter("creator =", player.nickname).filter("status = ", 'PLAYING')
+        if game != None:
+            self.response.out.write("FAIL Already playing")
             return
         
         # create a new game
@@ -317,6 +373,9 @@ class APIRequest(webapp.RequestHandler):
             FAIL for any errors.
         """
         
+        # We purge here to launch this as often as possible
+        self._purge()
+        
         nickname = self.request.get("nickname")
         password = self.request.get("password")
         game_id = self.request.get("game")
@@ -340,7 +399,7 @@ class APIRequest(webapp.RequestHandler):
         
         # check if it's the owner
         if game.creator.nickname != nickname:
-            self.response.out.write("FAIL No the creator")
+            self.response.out.write("FAIL Not the creator")
             return
         
         if status != None and status != "":
@@ -392,6 +451,9 @@ class APIRequest(webapp.RequestHandler):
                      
         elif command == "update":
             self.update()
+            
+        elif command == "disconnect":
+            self.disconnect()
             
         else:
             self.response.out.write("FAIL Unknown command")  

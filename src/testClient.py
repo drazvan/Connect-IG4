@@ -25,6 +25,14 @@ def ping(nickname, password):
     
     return getStatus(handler.read())
     
+def disconnect(nickname, password):
+    """ Pings the server to say that we are ALIVE """
+
+    data = {'command' : 'disconnect', 'nickname': nickname, 'password': password}
+    handler = urllib.urlopen(API_URL, urllib.urlencode(data))
+
+    return getStatus(handler.read())
+    
 def create(nickname, password):
     """ Create a new game for the player """
     
@@ -62,7 +70,7 @@ if __name__ == "__main__":
             port = sys.argv[4]
             
             connection = connect(nickname, password, ip, port)
-            
+            print connection
     else:
         connection = "FAIL"
 
@@ -118,6 +126,7 @@ if __name__ == "__main__":
                 print answer['data']
         
             elif (int(choice) == 42):
+                print disconnect(nickname, password)
                 connection = "FAIL"
     
     print "Disconnected"

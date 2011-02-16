@@ -33,6 +33,7 @@ class Game(db.Model):
         - 'WAITING'
         - 'PLAYING'
         - 'FINISHED'
+        - 'ABANDONNED'
     """
     
     # We hold explicitly the winner and the looser for easier access
