@@ -2,4 +2,31 @@
 
 {% block 'content' %}
 
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th class="column1">Creator</th>
+			<th>Opponent</th>
+			<th>Table</th>
+		</tr>
+	</thead>
+	
+	{% for game in games %}
+	
+		<tr>
+			<td></td>
+			<td class="column1">{{game.creator.nickname}}</td>
+			<td>{% if game.opponent %}
+				{{game.opponent.nickname}}
+				{% endif %} </td>
+			<td><a href="/grid?game={{game.id}}">View board</a></td>
+		</tr>
+		
+	{% endfor %}
+
+
+
+</table>
+
 {% endblock %}

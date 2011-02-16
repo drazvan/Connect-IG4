@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block 'content' %}   
+   
+   <canvas id="canvas" width="700" height="600"></canvas>
+
+   <script type="application/javascript">
+		SIZE = 35;
+   
+		function drawSlot(ctx, color){
+			ctx.fillStyle = "rgba(50,50,200, 1)";
+		    ctx.fillRect(0, 0, 2 * SIZE, 2 * SIZE);
+			
+			ctx.fillStyle = color;
+			ctx.beginPath();
+			ctx.arc(SIZE, SIZE, 9*SIZE/10, 9*SIZE/10,Math.PI*2, true);
+			ctx.closePath();
+			ctx.fill();
+		}
+		
+		 function draw(table) {
+			var canvas = document.getElementById("canvas");
+			var ctx = canvas.getContext("2d");
+			var grey = "rgba(200, 200, 200, 1)";
+			var red = "rgba(200, 20, 20, 1)";
+			var yellow = "rgba(200, 200, 50, 1)";
+			
+			for (i = 0; i < 7; i++)
+			{
+				for (j = 0; j < 6; j++)
+				{
+					var color;
+					
+					if (table[j*7 + i] == 'r')
+						color = red;
+					if (table[j*7 + i] == 'y')
+						color = yellow;
+					if (table[j*7 + i] == '-')
+						color = grey;
+					
+					ctx.save();
+					ctx.translate(2*SIZE*i, 2*SIZE*j);
+					drawSlot(ctx, color);
+					ctx.restore();
+				}
+			}
+		 }
+		 
+		 draw('{{ board }}');
+	</script>
+    
+ {% endblock %}

@@ -6,6 +6,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.webapp import template
 
 from game import Player
+from game import Game
 from api import APIRequest
 
 template_path = os.path.join(os.path.dirname(__file__), 'templates/')
@@ -42,13 +43,39 @@ class PlayersPage(webapp.RequestHandler):
                                                 { 'Players' : 'active', 
                                                   'players' : players, 
                                                        }))
+
+class GridPage(webapp.RequestHandler):
+    """Games page"""
+        
+    def get(self):
+        
+        game_id = self.request.get("game")
+        board = "------------------------------------------"
+        
+        games = Game.all().filter("id = ", int(game_id))
+        if games.count() > 0:
+            game = games[0]
+            board = game.board
+
+            # ignore invalid boards            
+            if board == None or len(board) < 42:
+                board = "------------------------------------------"
+                
+        self.response.out.write(template.render(template_path + 'grid.html', 
+                                                { 'Games' : 'active', 
+                                                  'board' : board, 
+                                                       }))
+
         
 class GamesPage(webapp.RequestHandler):
     """Games page"""
         
     def get(self):
+        
+        
         self.response.out.write(template.render(template_path + 'games.html', 
-                                                { 'Games' : 'active'
+                                                { 'Games' : 'active',
+                                                 'games' : Game.all()
                                                        }))
 
 
@@ -74,6 +101,7 @@ class AboutPage(webapp.RequestHandler):
 application = webapp.WSGIApplication([('/', MainPage),
                                       ('/players', PlayersPage) ,
                                       ('/games', GamesPage),
+                                      ('/grid', GridPage),
                                       ('/scores', ScoresPage),
                                       ('/about', AboutPage),
                                       ('/api', APIRequest)
