@@ -49,7 +49,7 @@ ignore the rest of the options/content. Ideally you should make a function that
 takes the whole input and returns only the part between "---".
 '''
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from google.appengine.ext import webapp
 from game import Player, Game, Config
 
@@ -95,8 +95,18 @@ class APIRequest(webapp.RequestHandler):
             return None
         
         return player
-    
-    
+        
+    def _purge(self):
+        """ Purge all dead players (last_online > 45 secs) (and associated games?) """
+        
+        # The request is working, but I can't manage to delete...
+        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=45))
+        for player in players:
+            self.response.out.write(player.nickname)
+            #Game.all().filter("creator =", player.nickname).delete()
+            
+        #Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=45)).delete()
+
     def connect(self):
         """This command must be sent to the server whenever a player connects 
         for the first time. 
@@ -115,7 +125,7 @@ class APIRequest(webapp.RequestHandler):
             
         Return value
             - OK if everything is ok and the player has been added.
-            0 FAIL for any other errors (i.e. bad password, bad IP, bad port, etc.)
+            - FAIL for any other errors (i.e. bad password, bad IP, bad port, etc.)
         """  
         
         nickname = self.request.get("nickname")
@@ -130,11 +140,12 @@ class APIRequest(webapp.RequestHandler):
         if player == None:
             player = Player(nickname=nickname, password=password)
         
+        # It's a known player
         if password != player.password:
             self.response.out.write("FAIL Incorrect password")
             return 
         
-        # set new properties    
+        # set new properties, user authenticated  
         player.ip_address = ip_address
         player.listen_port = listen_port
         player.last_online = datetime.now()
@@ -157,6 +168,7 @@ class APIRequest(webapp.RequestHandler):
             - OK if everything is ok.
             - FAIL for any other errors (i.e. bad password, bad nickname, etc.)
         """
+        
         nickname = self.request.get("nickname")
         password = self.request.get("password")
 
@@ -175,6 +187,8 @@ class APIRequest(webapp.RequestHandler):
         # respond with OK
         self.response.out.write("OK")
         
+        
+    #TODO : the user is able to start multiple games. Not a good idea.
     def create(self):
         """Indicates that the given player is willing to start a game and is 
         waiting for an opponent.
@@ -187,6 +201,7 @@ class APIRequest(webapp.RequestHandler):
             - OK followed by a game id.
             - FAIL for any errors.
         """
+        
         nickname = self.request.get("nickname")
         password = self.request.get("password")
 
@@ -222,6 +237,9 @@ class APIRequest(webapp.RequestHandler):
             - FAIL for any errors.
         """
         
+        # Purge dead players from the list to prevent listing dead clients
+        self._purge()
+        
         self.response.out.write("OK\n")
         
         for game in Game.all().filter("status = ", "WAITING"):
@@ -241,6 +259,10 @@ class APIRequest(webapp.RequestHandler):
             - OK followed by the IP address and port of the opponent.
             - FAIL for any errors.
         """
+        
+        # Purge dead players before to prevent trying to connect to a dead client
+        self._purge()
+        
         nickname = self.request.get("nickname")
         password = self.request.get("password")
         opponent_nickname = self.request.get("opponent")
@@ -251,7 +273,7 @@ class APIRequest(webapp.RequestHandler):
             self.response.out.write("FAIL Authentication failed")
             return
         
-        # check existing opponent
+        # check existing opponent, the purge before is important here ;)
         opponent = self._get(Player, "nickname = ", opponent_nickname)
         
         if opponent == None:
