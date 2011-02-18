@@ -78,7 +78,7 @@ class APIRequest(webapp.RequestHandler):
             
         return config
             
-    def _authenticate(self, nickname, password, online = False):
+    def _authenticate(self, nickname, password, online = True):
         """Internal method used for user authentication.
         
         Checks if the password for the given user is correct.
@@ -127,7 +127,9 @@ class APIRequest(webapp.RequestHandler):
         If the player with the given nickname does not already exist then it is 
         created with the given password. If it already exists and the password 
         is incorrect FAIL is returned. If he's already online, he won't be connected
-        to prevent messing up with the IP and Port
+        to prevent messing up with the IP and Port.
+        
+        This is the only time we do not check if the player is online to act on the system.
 
         Parameters
             - nickname : is the name of the player and it must be unique.
@@ -194,7 +196,7 @@ class APIRequest(webapp.RequestHandler):
         password = self.request.get("password")
         
         # authenticate        
-        player = self._authenticate(nickname, password, True)
+        player = self._authenticate(nickname, password)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -234,7 +236,7 @@ class APIRequest(webapp.RequestHandler):
         password = self.request.get("password")
 
         # authenticate        
-        player = self._authenticate(nickname, password, True)
+        player = self._authenticate(nickname, password)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -268,7 +270,7 @@ class APIRequest(webapp.RequestHandler):
         password = self.request.get("password")
 
         # authenticate        
-        player = self._authenticate(nickname, password, True)
+        player = self._authenticate(nickname, password)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -338,7 +340,7 @@ class APIRequest(webapp.RequestHandler):
         opponent_nickname = self.request.get("opponent")
 
         # authenticate        
-        player = self._authenticate(nickname, password, True)
+        player = self._authenticate(nickname, password)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -402,7 +404,7 @@ class APIRequest(webapp.RequestHandler):
         board = self.request.get("board")
         
         # authenticate        
-        player = self._authenticate(nickname, password, True)
+        player = self._authenticate(nickname, password)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
