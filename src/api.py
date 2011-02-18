@@ -78,10 +78,14 @@ class APIRequest(webapp.RequestHandler):
             
         return config
             
-    def _authenticate(self, nickname, password):
+    def _authenticate(self, nickname, password, online = False):
         """Internal method used for user authentication.
         
         Checks if the password for the given user is correct.
+        The online parameters activate a check on the user. If online == True
+        and the player is not online, this will return None.
+        This is made to prevent offline user to act on the game.
+        And offline player should 'connect' before doing anything.
         
         Return value:
             - a Player instance if the user has be authenticated
@@ -92,6 +96,9 @@ class APIRequest(webapp.RequestHandler):
         
         # if it's a new player
         if player == None or password != player.password: 
+            return None
+        
+        if (online == True and player.online != True):
             return None
         
         return player
@@ -173,6 +180,7 @@ class APIRequest(webapp.RequestHandler):
         """
             This command needs to be called before leaving the client, it marks the player as offline.
             If the user doesn't disconnect, he'll need to wait 90 seconds to be purged automatically
+            We can disconnect only online players, hence the True in the authenticate
             
             Parameters
                 - nickname : is the name of the player.
@@ -186,7 +194,7 @@ class APIRequest(webapp.RequestHandler):
         password = self.request.get("password")
         
         # authenticate        
-        player = self._authenticate(nickname, password)
+        player = self._authenticate(nickname, password, True)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -210,7 +218,9 @@ class APIRequest(webapp.RequestHandler):
     def ping(self):
         """Must be sent to the server every 15 seconds so that the server knows 
         which players are online and which are offline.
-
+        
+        Only online player can ping, hence the True in the authenticate.
+        
         Parameters
             - nickname : is the name of the player.
             - password : is the password for the given player.
@@ -224,7 +234,7 @@ class APIRequest(webapp.RequestHandler):
         password = self.request.get("password")
 
         # authenticate        
-        player = self._authenticate(nickname, password)
+        player = self._authenticate(nickname, password, True)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -242,7 +252,9 @@ class APIRequest(webapp.RequestHandler):
     def create(self):
         """Indicates that the given player is willing to start a game and is 
         waiting for an opponent.
-
+        
+        Only online players can create, hence the True in the authenticate
+        
         Parameters
             - nickname : is the name of the player.
             - password : is the password for the given player.
@@ -256,7 +268,7 @@ class APIRequest(webapp.RequestHandler):
         password = self.request.get("password")
 
         # authenticate        
-        player = self._authenticate(nickname, password)
+        player = self._authenticate(nickname, password, True)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -305,6 +317,8 @@ class APIRequest(webapp.RequestHandler):
     def join(self):
         """Indicates that the given player wants to join the game created by 
         some other player.
+        
+        Only online players can join a game, hence the True in the authenticate
 
         Parameters
             - nickname : is the name of the player.
@@ -324,7 +338,7 @@ class APIRequest(webapp.RequestHandler):
         opponent_nickname = self.request.get("opponent")
 
         # authenticate        
-        player = self._authenticate(nickname, password)
+        player = self._authenticate(nickname, password, True)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
@@ -359,7 +373,9 @@ class APIRequest(webapp.RequestHandler):
     def update(self):
         """Update the status of a game. Only the player that created the game 
         can update its status.
-
+        
+        Only an online player can update the game, hence the True in the authenticate
+        
         Parameters
             - nickname : is the name of the player.
             - password : is the password for the given player.
@@ -386,7 +402,7 @@ class APIRequest(webapp.RequestHandler):
         board = self.request.get("board")
         
         # authenticate        
-        player = self._authenticate(nickname, password)
+        player = self._authenticate(nickname, password, True)
         if player == None:
             self.response.out.write("FAIL Authentication failed")
             return
