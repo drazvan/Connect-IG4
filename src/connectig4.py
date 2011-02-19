@@ -61,9 +61,10 @@ class GridPage(webapp.RequestHandler):
             if board == None or len(board) < 42:
                 board = "------------------------------------------"
                 
-        self.response.out.write(template.render(template_path + 'grid.html', 
+            self.response.out.write(template.render(template_path + 'grid.html', 
                                                 { 'Games' : 'active', 
-                                                  'board' : board, 
+                                                  'board' : board,
+                                                  'game' : game 
                                                        }))
 
         
@@ -74,17 +75,36 @@ class GamesPage(webapp.RequestHandler):
         
         
         self.response.out.write(template.render(template_path + 'games.html', 
-                                                { 'Games' : 'active',
-                                                 'games' : Game.all()
-                                                       }))
+                { 'Games' : 'active',
+                 'games_waiting' : Game.all().filter("status =", "WAITING"), 
+                 'games_playing' : Game.all().filter("status =", "PLAYING"),
+                 'games_finished' : Game.all().filter("status =", "FINISHED"),
+                       }))
 
 
 class ScoresPage(webapp.RequestHandler):
     """Scores page"""
         
     def get(self):
+        
+        for player in Player.all():
+            # avoid NoneType problems
+            if not player.won:
+                player.won = 0
+            if not player.lost:
+                player.lost = 0
+            if not player.created:
+                player.created = 0
+            if not player.abandoned:
+                player.abandoned = 0
+                
+            # compute score
+            player.score = 10 * player.won - 3 * player.lost
+            player.put() 
+        
         self.response.out.write(template.render(template_path + 'scores.html', 
-                                                { 'Scores' : 'active'
+                                                { 'Scores' : 'active',
+                                                  'players' : Player.all().order("-score")
                                                        }))
           
           
@@ -96,15 +116,15 @@ class AboutPage(webapp.RequestHandler):
                                                 { 'About' : 'active'
                                                        }))       
 
-
-
+        
 application = webapp.WSGIApplication([('/', MainPage),
                                       ('/players', PlayersPage) ,
                                       ('/games', GamesPage),
                                       ('/grid', GridPage),
                                       ('/scores', ScoresPage),
                                       ('/about', AboutPage),
-                                      ('/api', APIRequest)
+                                      ('/api', APIRequest),
+                                      ('/purge', APIRequest),
                                       ], debug=True)
 
 

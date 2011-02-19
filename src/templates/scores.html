@@ -2,6 +2,40 @@
 
 {% block 'content' %}
 
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th class="column1">Nickname</th>
+			<th>Won</th>
+			<th>Lost</th>
+			<th>Created</th>
+			<th>Abandoned</th>
+			<th>Score</th>
+		</tr>
+	</thead>
+	
+	{% for player in players %}
+	
+		<tr>
+			<td>{% if player.online %}
+				<img src="/img/bullet_green.png"/>
+			{% else %}
+				<img src="/img/bullet_black.png"/>
+			{% endif %}</td>
+			<td class="column1">{{player.nickname}}</td>
+			<td>{{player.won}}</td>
+			<td>{{player.lost}}</td>
+			<td>{{player.created}}</td>
+			<td>{{player.abandoned}}</td>
+			<td><b>{{player.score}}</b></td>
+		</tr>
+		
+	{% endfor %}
+
+
+
+</table>
 
 
 {% endblock %}

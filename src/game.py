@@ -17,6 +17,8 @@ class Player(db.Model):
     # statistics
     won = db.IntegerProperty()
     lost = db.IntegerProperty()
+    created = db.IntegerProperty()
+    abandoned = db.IntegerProperty()
     score = db.IntegerProperty()
     
     

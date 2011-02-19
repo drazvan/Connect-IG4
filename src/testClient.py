@@ -83,6 +83,7 @@ if __name__ == "__main__":
         port = raw_input("Enter the port : ")
 
         connection = connect(nickname, password, ip, port)
+        print connection
 
     # Set the last time we pinged at the return of the request
     last_ping = time.time()
@@ -115,8 +116,8 @@ if __name__ == "__main__":
             elif (int(choice) == 2):
                 opponent = "FAIL"
                 while (opponent.startswith("FAIL")):
-                    opponent = raw_input("Enter your oppenent's name : ")
-                    answer = join(nickname, password, oppenent)
+                    opponent = raw_input("Enter your opponent's name : ")
+                    answer = join(nickname, password, opponent)
                     opponent = answer['status']
             
                 print "Answer : " + answer['data']

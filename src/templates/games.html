@@ -2,6 +2,8 @@
 
 {% block 'content' %}
 
+<h2>Waiting</h2>
+
 <table>
 	<thead>
 		<tr>
@@ -9,23 +11,90 @@
 			<th class="column1">Creator</th>
 			<th>Opponent</th>
 			<th>Table</th>
+			<th>Winner</th>
 		</tr>
 	</thead>
 	
-	{% for game in games %}
+	{% for game in games_waiting %}
 	
 		<tr>
-			<td></td>
+			<td>{{ game.id }}</td>
 			<td class="column1">{{game.creator.nickname}}</td>
 			<td>{% if game.opponent %}
 				{{game.opponent.nickname}}
 				{% endif %} </td>
 			<td><a href="/grid?game={{game.id}}">View board</a></td>
+			<td><b>{% if game.winner %}
+				{{game.winner.nickname}}
+				{% endif %}</b> 
+			</td>
 		</tr>
 		
 	{% endfor %}
 
+</table>
 
+<h2>Playing</h2>
+
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th class="column1">Creator</th>
+			<th>Opponent</th>
+			<th>Table</th>
+			<th>Winner</th>
+		</tr>
+	</thead>
+	
+	{% for game in games_playing %}
+	
+		<tr>
+			<td>{{ game.id }}</td>
+			<td class="column1">{{game.creator.nickname}}</td>
+			<td>{% if game.opponent %}
+				{{game.opponent.nickname}}
+				{% endif %} </td>
+			<td><a href="/grid?game={{game.id}}">View board</a></td>
+			<td><b>{% if game.winner %}
+				{{game.winner.nickname}}
+				{% endif %}</b> 
+			</td>
+		</tr>
+		
+	{% endfor %}
+
+</table>
+
+<h2>Finished</h2>
+
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th class="column1">Creator</th>
+			<th>Opponent</th>
+			<th>Table</th>
+			<th>Winner</th>
+		</tr>
+	</thead>
+	
+	{% for game in games_finished %}
+	
+		<tr>
+			<td>{{ game.id }}</td>
+			<td class="column1">{{game.creator.nickname}}</td>
+			<td>{% if game.opponent %}
+				{{game.opponent.nickname}}
+				{% endif %} </td>
+			<td><a href="/grid?game={{game.id}}">View board</a></td>
+			<td><b>{% if game.winner %}
+				{{game.winner.nickname}}
+				{% endif %}</b> 
+			</td>
+		</tr>
+		
+	{% endfor %}
 
 </table>
 

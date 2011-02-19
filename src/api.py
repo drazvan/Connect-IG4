@@ -104,10 +104,10 @@ class APIRequest(webapp.RequestHandler):
         return player
         
     def _purge(self):
-        """ Purge all dead players (last_online > 90 secs) """
+        """ Purge all dead players (last_online > 60 secs) """
 
-        # Get players who haven't pinged in more than 90secs and who are currently marked as online
-        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=90)).filter("online = ", True)
+        # Get players who haven't pinged in more than 60secs and who are currently marked as online
+        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=60)).filter("online = ", True)
         for player in players:
             player.online = False # Not online anymore
             player.put() # save
@@ -116,8 +116,12 @@ class APIRequest(webapp.RequestHandler):
             player_game = Game.all().filter("creator =", player.nickname).filter("status = ", 'PLAYING')
             
             for game in player_game:
-                game.status = 'ABANDONNED' # game OVER
+                game.status = 'ABANDONED' # game OVER
                 game.put() # save
+                
+                # increment the abandoned counter
+                player.abandoned = player.abandoned + 1
+                player.put()
             
             
     def connect(self):
@@ -295,6 +299,10 @@ class APIRequest(webapp.RequestHandler):
         # save game
         game.put()
         
+        # increment the number of games created by the player
+        player.created = player.created + 1
+        player.put()
+        
         # respond with OK + game id
         self.response.out.write("OK\n%s" % game.id )
         
@@ -420,9 +428,6 @@ class APIRequest(webapp.RequestHandler):
             self.response.out.write("FAIL Not the creator")
             return
         
-        if status != None and status != "":
-            game.status = status
-            
         if winner != None and winner != "":
             if not winner in [game.creator.nickname, game.opponent.nickname]:
                 self.response.out.write("FAIL Invalid winner")
@@ -434,6 +439,17 @@ class APIRequest(webapp.RequestHandler):
             else:
                 game.winner = game.opponent
                 game.looser = game.creator
+        
+        if status != None and status != "":
+            # if it's the end of the game
+            if game.status == 'PLAYING' and status == 'FINISHED':
+                game.winner.won = game.winner.won + 1
+                game.winner.put()
+                
+                game.looser.lost = game.looser.lost + 1
+                game.looser.put()
+                
+            game.status = status
                 
         if board != None and board != "":
             game.board = board
@@ -443,6 +459,11 @@ class APIRequest(webapp.RequestHandler):
         
         # respond with OK
         self.response.out.write("OK")
+        
+    def get(self):
+        """On get we only do purge."""
+        self._purge()
+        self.response.out.write("Purged")
         
     def post(self):
         # extract parameters      

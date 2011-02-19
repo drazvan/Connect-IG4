@@ -1,0 +1,4 @@
+cron:
+- description: Purge offline users
+  url: /purge
+  schedule: every 1 minutes synchronized
