@@ -167,8 +167,12 @@ class APIRequest(webapp.RequestHandler):
         elif player.online == True:
             # It will be triggered if the player has left without saying 'disconnect'
             # 90 seconds later, the player will be able to connect himself if someone triggers a purge
-            self.response.out.write("FAIL Already connected elsewhere")
-            return
+            
+            # THIS IS REALLY ANNOYING DURING DEVELOPEMENT
+            
+            # self.response.out.write("FAIL Already connected elsewhere")
+            # return
+            pass
         
         # set new properties, user authenticated  
         player.ip_address = ip_address
