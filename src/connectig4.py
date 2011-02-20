@@ -67,6 +67,24 @@ class GridPage(webapp.RequestHandler):
                                                   'game' : game 
                                                        }))
 
+class GridStrPage(webapp.RequestHandler):
+    """Games page"""
+        
+    def get(self):
+        
+        game_id = self.request.get("game")
+        board = "------------------------------------------"
+        
+        games = Game.all().filter("id = ", int(game_id))
+        if games.count() > 0:
+            game = games[0]
+            board = game.board
+
+            # ignore invalid boards            
+            if board == None or len(board) < 42:
+                board = "------------------------------------------"
+                
+        self.response.out.write(board)
         
 class GamesPage(webapp.RequestHandler):
     """Games page"""
@@ -121,6 +139,7 @@ application = webapp.WSGIApplication([('/', MainPage),
                                       ('/players', PlayersPage) ,
                                       ('/games', GamesPage),
                                       ('/grid', GridPage),
+                                      ('/gridstr', GridStrPage),
                                       ('/scores', ScoresPage),
                                       ('/about', AboutPage),
                                       ('/api', APIRequest),

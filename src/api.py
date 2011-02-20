@@ -104,23 +104,45 @@ class APIRequest(webapp.RequestHandler):
         return player
         
     def _purge(self):
-        """ Purge all dead players (last_online > 60 secs) """
+        """ Purge all dead players (last_online > 30 secs) 
+        
+        The ping can be efficiently made every 30s in C. 
+        """
 
-        # Get players who haven't pinged in more than 60secs and who are currently marked as online
-        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=60)).filter("online = ", True)
+        # Get players who haven't pinged in more than 30secs and who are currently marked as online
+        players = Player.all().filter("last_online < ", datetime.now() - timedelta(seconds=30)).filter("online = ", True)
         for player in players:
             player.online = False # Not online anymore
             player.put() # save
         
             # Get his former game
-            player_game = Game.all().filter("creator =", player.nickname).filter("status = ", 'PLAYING')
+            player_game = Game.all().filter("creator =", player).filter("status = ", 'PLAYING')
             
             for game in player_game:
                 game.status = 'ABANDONED' # game OVER
                 game.put() # save
                 
                 # increment the abandoned counter
-                player.abandoned = player.abandoned + 1
+                if player.abandoned:
+                    player.abandoned = player.abandoned + 1
+                else:
+                    player.abandoned = 1
+                    
+                player.put()
+                
+            # Get his former game
+            player_game = Game.all().filter("creator =", player).filter("status = ", 'WAITING')
+            
+            for game in player_game:
+                game.status = 'ABANDONED' # game OVER
+                game.put() # save
+                
+                # increment the abandoned counter
+                if player.abandoned:
+                    player.abandoned = player.abandoned + 1
+                else:
+                    player.abandoned = 1
+                    
                 player.put()
             
             
@@ -283,11 +305,17 @@ class APIRequest(webapp.RequestHandler):
             self.response.out.write("FAIL Authentication failed")
             return
         
-        # check if he's already playing
-        game = Game.all().filter("creator =", player.nickname).filter("status = ", 'PLAYING')
-        if game != None:
+        # check if he's already playing or waiting
+        games = Game.all().filter("creator =", player).filter("status =", 'WAITING')
+        if games.count() > 0:
+            self.response.out.write("FAIL Already created a game")
+            return
+        
+        games = Game.all().filter("creator =", player).filter("status =", 'PLAYING')
+        if games.count() > 0:
             self.response.out.write("FAIL Already playing")
             return
+
         
         # create a new game
         config = self._config()
@@ -304,7 +332,11 @@ class APIRequest(webapp.RequestHandler):
         game.put()
         
         # increment the number of games created by the player
-        player.created = player.created + 1
+        if player.created:
+            player.created = player.created + 1
+        else: 
+            player.created = 1
+            
         player.put()
         
         # respond with OK + game id

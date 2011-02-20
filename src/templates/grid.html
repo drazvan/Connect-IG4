@@ -49,6 +49,28 @@
 		 }
 		 
 		 draw('{{ board }}');
+		 
+    	 function doAjaxPost() {
+			 
+			 $.ajax({  
+			   type: "GET",  
+			   url: "/gridstr?game={{game.id}}",  
+			   data: "",  
+			   success: function(resp){  
+			     draw(resp);
+			   },  
+			   error: function(e){  
+			     alert('Error: ' + e);  
+			   }  
+			 });  
+			}
+			
+		if ("{{game.status}}" == "PLAYING")
+		{
+			var intervalId = setInterval(function() {
+			 	doAjaxPost();
+	    	 }, 2000);
+    	}
 	</script>
     
  {% endblock %}
