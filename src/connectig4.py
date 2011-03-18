@@ -134,6 +134,39 @@ class AboutPage(webapp.RequestHandler):
                                                 { 'About' : 'active'
                                                        }))       
 
+
+          
+class RemoveUnused(webapp.RequestHandler):
+    """Removes unused players"""
+        
+    def get(self):
+        for player in Player.all():
+            print player.nickname
+            
+            print player.own_games.filter("status !=", "ABANDONED").count()
+            print player.other_games.filter("status !=", "ABANDONED").count()
+            
+            
+            # if it has only abandoned games we delete the player and the games
+            if player.own_games.filter("status !=", "ABANDONED").count() == 0 \
+                and player.other_games.filter("status !=", "ABANDONED").count() == 0:
+                
+                # if there are won games we delete them
+                for game in player.own_games.filter("status =", "ABANDONED"):
+                    game.delete();
+                    
+                
+                # if there are other games we delete them
+                for game in player.other_games.filter("status =", "ABANDONED"):
+                    game.delete();
+                    
+                
+                # finally delete player
+                player.delete()
+                
+                print "deleted player", player.nickname
+        
+        print "OK" 
         
 application = webapp.WSGIApplication([('/', MainPage),
                                       ('/players', PlayersPage) ,
@@ -144,6 +177,7 @@ application = webapp.WSGIApplication([('/', MainPage),
                                       ('/about', AboutPage),
                                       ('/api', APIRequest),
                                       ('/purge', APIRequest),
+                                      ('/removeunused', RemoveUnused),
                                       ], debug=True)
 
 
