@@ -479,10 +479,17 @@ class APIRequest(webapp.RequestHandler):
         if status != None and status != "":
             # if it's the end of the game
             if game.status == 'PLAYING' and status == 'FINISHED':
-                game.winner.won = game.winner.won + 1
+                if game.winner.won:
+                    game.winner.won = game.winner.won + 1
+                else: 
+                    game.winner.won = 1
                 game.winner.put()
                 
-                game.looser.lost = game.looser.lost + 1
+                if game.looser.lost:
+                    game.looser.lost = game.looser.lost + 1
+                else:
+                    game.looser.lost = 1
+                    
                 game.looser.put()
                 
             game.status = status

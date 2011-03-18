@@ -2,3 +2,7 @@ cron:
 - description: Purge offline users
   url: /purge
   schedule: every 1 minutes synchronized
+  
+- description: Remove unused players
+  url: /removeunused
+  schedule: every 30 minutes
